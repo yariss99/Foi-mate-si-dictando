@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Foi de lucru A4 – Matematică și dictando</title>
+<style>
+  :root {
+    --ink: #243447;
+    --blue: #6b91b8;
+    --blue-soft: #eaf2f8;
+    --paper: #ffffff;
+    --screen: #edf1f4;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 22px;
+    background: var(--screen);
+    color: var(--ink);
+    font-family: "Segoe UI", Arial, sans-serif;
+  }
+  .toolbar {
+    max-width: 920px;
+    margin: 0 auto 18px;
+    padding: 16px 18px;
+    background: #fff;
+    border: 1px solid #dce4ea;
+    border-radius: 14px;
+    box-shadow: 0 4px 16px rgba(35,55,75,.07);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+  }
+  .toolbar h1 {
+    flex: 1 1 100%;
+    margin: 0 0 3px;
+    font-size: 19px;
+    font-weight: 700;
+    letter-spacing: .2px;
+  }
+  .toolbar p {
+    flex: 1 1 100%;
+    margin: 0 0 7px;
+    color: #627487;
+    font-size: 13px;
+  }
+  button {
+    border: 1px solid #cbd8e2;
+    background: #f7fafc;
+    color: #30485f;
+    padding: 10px 16px;
+    border-radius: 9px;
+    font-size: 14px;
+    font-weight: 650;
+    cursor: pointer;
+    transition: .15s ease;
+  }
+  button:hover { background: var(--blue-soft); border-color: #9bb6ce; }
+  button.active {
+    color: #fff;
+    background: #527da5;
+    border-color: #527da5;
+  }
+  button.print {
+    margin-left: auto;
+    color: #fff;
+    background: #304f6d;
+    border-color: #304f6d;
+  }
+  button.print:hover { background: #203d59; }
+  .status {
+    width: 100%;
+    color: #6b7d8d;
+    font-size: 12px;
+    padding-top: 3px;
+  }
+  .sheet-wrap { display: flex; justify-content: center; }
+  .sheet {
+    position: relative;
+    width: 210mm;
+    height: 297mm;
+    padding: 13mm 13mm 12mm;
+    background: var(--paper);
+    box-shadow: 0 5px 24px rgba(26,45,62,.16);
+    overflow: hidden;
+  }
+  .frame {
+    position: absolute;
+    inset: 5mm;
+    border: .25mm solid #d8e2ea;
+    pointer-events: none;
+  }
+  .sheet-header {
+    height: 14mm;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12mm;
+    color: #536b80;
+    font-size: 11pt;
+  }
+  .field {
+    display: inline-block;
+    min-width: 72mm;
+    border-bottom: .25mm solid #9aabba;
+    height: 7mm;
+    vertical-align: bottom;
+  }
+  .date-field { min-width: 34mm; }
+  .math-grid {
+    position: absolute;
+    left: 13mm;
+    right: 13mm;
+    top: 29mm;
+    bottom: 13mm;
+    background-image:
+      linear-gradient(to right, #d8e5ef .22mm, transparent .22mm),
+      linear-gradient(to bottom, #d8e5ef .22mm, transparent .22mm);
+    background-size: 5mm 5mm;
+    border: .25mm solid #cbdbe8;
+  }
+  .dictando-lines {
+    position: absolute;
+    left: 1mm;
+    right: 1mm;
+    top: 21mm;
+    bottom: 21mm;
+    /* Liniatură dictando: linii identice, cu grosime constantă de 0,3 mm
+       și distanțare uniformă de 8 mm. Model SVG pentru a evita variațiile
+       de grosime produse de randarea gradientului la imprimare. */
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100%25' height='8mm' viewBox='0 0 1000 8' preserveAspectRatio='none'%3E%3Cline x1='0' y1='0.15' x2='1000' y2='0.15' stroke='%235f96ed' stroke-width='0.3' vector-effect='non-scaling-stroke'/%3E%3C/svg%3E");
+    background-size: 100% 8mm;
+    background-repeat: repeat-y;
+  }
+  .dictando-lines::before {
+    content: "";
+    position: absolute;
+    top: -21mm;
+    bottom: -21mm;
+    left: 20mm;
+    border-left: .35mm solid #f04444;
+  }
+  /* Modelul dictando urmează imaginea de referință, fără antet sau subsol. */
+  #dictSheet .frame {
+    inset: 1mm;
+    border: .35mm solid #aeb2b7;
+  }
+  #dictSheet .sheet-header,
+  #dictSheet .footer {
+    display: none;
+  }
+  .footer {
+    position: absolute;
+    bottom: 7mm;
+    right: 14mm;
+    color: #a0acb7;
+    font-size: 8pt;
+    letter-spacing: .7px;
+  }
+  .hidden { display: none; }
+  @page { size: A4 portrait; margin: 0; }
+  @media print {
+    html, body { margin: 0 !important; padding: 0 !important; background: #fff !important; }
+    .toolbar { display: none !important; }
+    .sheet-wrap { display: block; }
+    .sheet {
+      width: 210mm;
+      height: 297mm;
+      margin: 0;
+      box-shadow: none;
+      page-break-after: avoid;
+      break-after: avoid;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    .frame { border-color: #d8e2ea; }
+  }
+  @media screen and (max-width: 850px) {
+    body { padding: 10px; }
+    .sheet { transform-origin: top center; }
+    .sheet-wrap { overflow: auto; justify-content: flex-start; }
+  }
+</style>
+</head>
+<body>
+  <section class="toolbar" aria-label="Comenzi pentru alegerea foii">
+    <h1>Foi pentru activitatea de la clasă</h1>
+    <p>Alege tipul de pagină, apoi selectează „Tipărește foaia”. Format: A4, portret.</p>
+    <button id="mathBtn" class="active" type="button" aria-pressed="true">Foaie de matematică</button>
+    <button id="dictBtn" type="button" aria-pressed="false">Foaie dictando</button>
+    <button class="print" type="button" onclick="window.print()">Tipărește foaia</button>
+    <div class="status" id="status">Este selectată foaia de matematică – caroiaj de 5 mm.</div>
+  </section>
+
+  <main class="sheet-wrap">
+    <section class="sheet" id="mathSheet" aria-label="Foaie de matematică A4">
+      <div class="frame"></div>
+      <div class="sheet-header">
+        <div>Nume și prenume: <span class="field"></span></div>
+        <div>Data: <span class="field date-field"></span></div>
+      </div>
+      <div class="math-grid"></div>
+      <div class="footer">CRED ÎN EDUCAȚIE</div>
+    </section>
+
+    <section class="sheet hidden" id="dictSheet" aria-label="Foaie dictando A4">
+      <div class="frame"></div>
+      <div class="sheet-header">
+        <div>Nume și prenume: <span class="field"></span></div>
+        <div>Data: <span class="field date-field"></span></div>
+      </div>
+      <div class="dictando-lines"></div>
+      <div class="footer">CRED ÎN EDUCAȚIE</div>
+    </section>
+  </main>
+
+<script>
+  const mathBtn = document.getElementById('mathBtn');
+  const dictBtn = document.getElementById('dictBtn');
+  const mathSheet = document.getElementById('mathSheet');
+  const dictSheet = document.getElementById('dictSheet');
+  const status = document.getElementById('status');
+
+  function selectSheet(type) {
+    const isMath = type === 'math';
+    mathSheet.classList.toggle('hidden', !isMath);
+    dictSheet.classList.toggle('hidden', isMath);
+    mathBtn.classList.toggle('active', isMath);
+    dictBtn.classList.toggle('active', !isMath);
+    mathBtn.setAttribute('aria-pressed', String(isMath));
+    dictBtn.setAttribute('aria-pressed', String(!isMath));
+    status.textContent = isMath
+      ? 'Este selectată foaia de matematică – caroiaj de 5 mm.'
+      : 'Este selectată foaia dictando – linii uniforme, la distanță de 0,8 cm.';
+  }
+  mathBtn.addEventListener('click', () => selectSheet('math'));
+  dictBtn.addEventListener('click', () => selectSheet('dict'));
+</script>
+</body>
+</html>
